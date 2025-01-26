@@ -1,0 +1,38 @@
+{
+  "name": "orbit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "db:create": "ts-node database/scripts/create-db.ts",
+    "db:start": "ts-node database/scripts/start-db.ts",
+    "db:stop": "ts-node database/scripts/stop-db.ts",
+    "db": "ts-node database/main.ts",
+    
+    "format": "pnpm -r format",
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "start": "pnpm -r start",
+
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build",
+    "start:web": "pnpm --filter web start",
+    
+    "dev:api": "pnpm --filter api dev",
+    "build:api": "pnpm --filter api build",
+    "start:api": "pnpm --filter api start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.7.3"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.10.10",
+    "inquirer": "^12.3.2"
+  }
+}
