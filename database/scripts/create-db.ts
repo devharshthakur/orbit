@@ -34,7 +34,7 @@ function createDatabaseContainer() {
     -e POSTGRES_USER=${POSTGRES_USER} \
     -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD} \
     -e POSTGRES_DB=${POSTGRES_DB} \
-    -v ${POSTGRES_VOLUME_PATH}:/var/lib/postgresql/data \
+    -v ${POSTGRES_VOLUME_PATH}:/var/lib/postgresql/data-1 \
     ${POSTGRES_IMAGE}
   `.trim();
 
