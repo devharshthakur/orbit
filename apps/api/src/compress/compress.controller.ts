@@ -1,8 +1,9 @@
-import { Controller, Post, UseInterceptors, UploadedFiles, Res, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFiles, Res, HttpException, HttpStatus, Body } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { createReadStream, unlink } from 'fs';
 import { CompressService } from './compress.service';
+import * as path from 'path';
 
 @Controller('compress')
 export class CompressController {
@@ -10,7 +11,13 @@ export class CompressController {
 
   @Post()
   @UseInterceptors(FileFieldsInterceptor([{ name: 'files', maxCount: 5 }]))
-  async compressFiles(@UploadedFiles() files: { files?: Express.Multer.File[] }, @Res() res: Response) {
+  async compressFiles(
+    @UploadedFiles() files: { files?: Express.Multer.File[] },
+    @Body('compressionType') compressionType: string,
+    @Res() res: Response,
+  ) {
+    console.log('Received compressionType:', compressionType);
+
     try {
       /* Input Validation */
       const uploadedFiles = files.files || [];
@@ -18,10 +25,14 @@ export class CompressController {
         throw new HttpException('No PDF files provided', HttpStatus.BAD_REQUEST);
       }
 
+      if (!['lossless', 'medium', 'extreme'].includes(compressionType)) {
+        throw new HttpException('Invalid compression type', HttpStatus.BAD_REQUEST);
+      }
+
       /* PDF Compression */
       const compressedPaths: string[] = [];
       for (const file of uploadedFiles) {
-        const compressedPath = await this.compressService.compressPdf(file.path);
+        const compressedPath = await this.compressService.compressPdf(file.path, compressionType);
         compressedPaths.push(compressedPath);
       }
 
@@ -41,7 +52,7 @@ export class CompressController {
         /* Single File: Send PDF Directly */
         const pdfPath = compressedPaths[0];
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename="compressed.pdf"');
+        res.setHeader('Content-Disposition', `attachment; filename="${path.basename(pdfPath)}"`);
 
         const readStream = createReadStream(pdfPath);
         readStream.pipe(res);

@@ -3,13 +3,14 @@ import prisma from '@/lib/prisma';
 
 export async function POST(req: Request) {
   try {
-    const { fileName, sizeBefore, sizeAfter } = await req.json();
+    const { fileName, sizeBefore, sizeAfter, compressionType } = await req.json();
 
     const compressionRecord = await prisma.compressionHistory.create({
       data: {
         fileName,
         sizeBefore,
         sizeAfter,
+        compressionType,
         date: new Date(),
       },
     });

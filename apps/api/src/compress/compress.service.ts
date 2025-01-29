@@ -7,23 +7,70 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class CompressService {
-  async compressPdf(inputFilePath: string): Promise<string> {
+  async compressPdf(inputFilePath: string, compressionType: string): Promise<string> {
     return new Promise((resolve, reject) => {
       try {
         const outputFilePath = path.join(process.cwd(), 'uploads', `compressed-${uuidv4()}.pdf`);
 
-        const args = [
-          '-sDEVICE=pdfwrite',
-          '-dCompatibilityLevel=1.4',
-          '-dPDFSETTINGS=/ebook',
-          '-dNOPAUSE',
-          '-dQUIET',
-          '-dBATCH',
-          `-sOutputFile=${outputFilePath}`,
-          inputFilePath,
-        ];
+        let settings: string[] = [];
 
-        const gs = spawn('gs', args);
+        // Define compression settings based on type
+        switch (compressionType) {
+          case 'lossless':
+            settings = [
+              '-sDEVICE=pdfwrite',
+              '-dCompatibilityLevel=1.4',
+              '-dPDFSETTINGS=/prepress',
+              '-dNOPAUSE',
+              '-dQUIET',
+              '-dBATCH',
+              `-sOutputFile=${outputFilePath}`,
+              inputFilePath,
+            ];
+            break;
+
+          case 'medium':
+            settings = [
+              '-sDEVICE=pdfwrite',
+              '-dCompatibilityLevel=1.4',
+              '-dPDFSETTINGS=/ebook',
+              '-dNOPAUSE',
+              '-dQUIET',
+              '-dBATCH',
+              `-sOutputFile=${outputFilePath}`,
+              inputFilePath,
+            ];
+            break;
+
+          case 'extreme':
+            settings = [
+              '-sDEVICE=pdfwrite',
+              '-dCompatibilityLevel=1.4',
+              '-dPDFSETTINGS=/screen',
+              '-dNOPAUSE',
+              '-dQUIET',
+              '-dBATCH',
+              `-sOutputFile=${outputFilePath}`,
+              inputFilePath,
+            ];
+            break;
+
+          default:
+            // Default to medium compression if type is unknown
+            settings = [
+              '-sDEVICE=pdfwrite',
+              '-dCompatibilityLevel=1.4',
+              '-dPDFSETTINGS=/ebook',
+              '-dNOPAUSE',
+              '-dQUIET',
+              '-dBATCH',
+              `-sOutputFile=${outputFilePath}`,
+              inputFilePath,
+            ];
+            break;
+        }
+
+        const gs = spawn('gs', settings);
 
         gs.on('error', (err) => {
           reject(new InternalServerErrorException(`Ghostscript error: ${err.message}`));

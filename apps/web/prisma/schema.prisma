@@ -14,9 +14,10 @@ datasource db {
 }
 
 model CompressionHistory {
-  id         Int      @id @default(autoincrement())
-  fileName   String
-  date       DateTime
-  sizeBefore Float
-  sizeAfter  Float
+  id              Int      @id @default(autoincrement())
+  fileName        String
+  date            DateTime
+  sizeBefore      Float
+  sizeAfter       Float
+  compressionType String
 }

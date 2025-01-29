@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'motion/react';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { DropzoneRootProps } from 'react-dropzone';
 import { HTMLMotionProps } from 'motion/react';
 
@@ -17,6 +18,8 @@ interface CompressedFileState {
   url: string;
   filename: string;
 }
+
+type CompressionType = 'lossless' | 'medium' | 'extreme';
 
 // Create a type intersection for the combined props
 type DropzoneMotionProps = DropzoneRootProps & HTMLMotionProps<'div'>;
@@ -27,6 +30,7 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [compressionType, setCompressionType] = useState<CompressionType>('medium');
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'application/pdf': ['.pdf'] },
@@ -48,6 +52,9 @@ export default function UploadPage() {
 
     const formData = new FormData();
     stagedFiles.forEach((file) => formData.append('files', file));
+    formData.append('compressionType', compressionType);
+
+    console.log('Sending compressionType:', compressionType);
 
     try {
       const response = await axios.post('/api/compress', formData, {
@@ -78,6 +85,7 @@ export default function UploadPage() {
         fileName: filename,
         sizeBefore: parseFloat(totalSizeBefore.toFixed(2)),
         sizeAfter: parseFloat(totalSizeAfter.toFixed(2)),
+        compressionType,
       });
 
       setStagedFiles([]);
@@ -114,6 +122,7 @@ export default function UploadPage() {
           <h2 className="text-2xl font-semibold text-primary">How it works</h2>
           <ol className="list-inside list-decimal space-y-2 text-sm text-muted-foreground">
             <li>Upload up to 5 PDF files (max 50MB each)</li>
+            <li>Select compression type</li>
             <li>We'll compress your files to reduce their size</li>
             <li>Download your compressed PDF(s)</li>
           </ol>
@@ -135,51 +144,64 @@ export default function UploadPage() {
           <p className="mt-2 text-sm text-muted-foreground">or click to select files</p>
         </motion.div>
 
-        <AnimatePresence>
-          {stagedFiles.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="rounded-lg bg-white/50 p-6 backdrop-blur-sm dark:bg-gray-950/50"
-            >
-              <h2 className="mb-4 text-xl font-semibold text-primary">Files to compress:</h2>
-              <ul className="space-y-2">
-                {stagedFiles.map((file, index) => (
-                  <motion.li
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="flex items-center justify-between rounded-lg bg-secondary p-3 text-sm"
-                  >
-                    <span className="max-w-[80%] truncate">{file.name}</span>
-                    <Button variant="ghost" size="sm" onClick={() => removeFile(file)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {stagedFiles.length > 0 && (
+          <div className="space-y-4">
+            <Select value={compressionType} onValueChange={(value) => setCompressionType(value as CompressionType)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Compression Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lossless">Lossless</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="extreme">Extreme</SelectItem>
+              </SelectContent>
+            </Select>
 
-        {stagedFiles.length > 0 && !compressedFile && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <Button onClick={handleUpload} disabled={isUploading} size="lg" className="w-full">
-              {isUploading ? (
-                <>
-                  <Upload className="mr-2 h-4 w-4 animate-bounce" />
-                  Compressing...
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Compress Files
-                </>
-              )}
-            </Button>
-          </motion.div>
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="rounded-lg bg-white/50 p-6 backdrop-blur-sm dark:bg-gray-950/50"
+              >
+                <h2 className="mb-4 text-xl font-semibold text-primary">Files to compress:</h2>
+                <ul className="space-y-2">
+                  {stagedFiles.map((file, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="flex items-center justify-between rounded-lg bg-secondary p-3 text-sm"
+                    >
+                      <span className="max-w-[80%] truncate">{file.name}</span>
+                      <Button variant="ghost" size="sm" onClick={() => removeFile(file)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
+            </AnimatePresence>
+
+            {!compressedFile && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <Button onClick={handleUpload} disabled={isUploading} size="lg" className="w-full">
+                  {isUploading ? (
+                    <>
+                      <Upload className="mr-2 h-4 w-4 animate-bounce" />
+                      Compressing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Compress Files
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+          </div>
         )}
 
         {isUploading && (

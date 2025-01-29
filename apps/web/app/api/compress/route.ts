@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
 
   try {
-    // Forward the request to NestJS backend
+    // Forward the request to NestJS backend with compressionType
     const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/compress`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
