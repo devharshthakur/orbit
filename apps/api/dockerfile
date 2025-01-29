@@ -1,0 +1,33 @@
+FROM node:20-slim
+
+# Install git, pnpm and Ghostscript
+RUN apt-get update && \
+    apt-get install -y git ghostscript && \
+    npm install -g pnpm && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app
+
+# Clone the repository (replace with your repository URL)
+RUN git clone https://github.com/devharshthakur/orbit.git .
+
+# Install dependencies and build the API
+RUN cd apps/api && \
+    pnpm install && \
+    pnpm run build
+
+# Create uploads directory (required by CompressModule)
+RUN mkdir -p apps/api/uploads && chmod 777 apps/api/uploads
+
+# Set environment variables
+ENV PORT=3000
+ENV NODE_ENV=production
+EXPOSE 3000
+
+# Set working directory to api folder
+WORKDIR /app/apps/api
+
+# Start the application using the package.json script
+CMD ["pnpm", "run", "start:prod"]
