@@ -11,7 +11,7 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Clone the repository (replace with your repository URL)
-RUN git clone https://github.com/devharshthakur/orbit.git .
+RUN git clone https://github.com/devharshthakur/orrbit.git .
 
 # Install dependencies and build the API
 RUN cd apps/api && \
